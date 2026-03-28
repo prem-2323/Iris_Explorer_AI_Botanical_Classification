@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Explorer | ML Prediction</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-1: #38bdf8;
+            --accent-2: #818cf8;
+            --accent-3: #e879f9;
+            --error: #fb7185;
+            --success: #34d399;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            animation: float 10s infinite alternate ease-in-out;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: rgba(56, 189, 248, 0.3);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: rgba(232, 121, 249, 0.3);
+            bottom: -50px;
+            right: -100px;
+            animation-delay: -3s;
+        }
+        
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            background: rgba(129, 140, 248, 0.3);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+            100% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 600px;
+            perspective: 1000px;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: cardEntrance 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(40px) rotateX(-5deg);
+        }
+
+        @keyframes cardEntrance {
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--text-main);
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, var(--accent-1), var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 300;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px 16px 16px 45px;
+            font-size: 1rem;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent-1);
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .input-group input:focus + i,
+        .input-group input:not(:placeholder-shown) + i {
+            color: var(--accent-1);
+        }
+        
+        /* Floating Labels */
+        .input-group label {
+            position: absolute;
+            left: 45px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .input-group input:focus ~ label,
+        .input-group input:valid ~ label {
+            top: -10px;
+            left: 12px;
+            font-size: 0.8rem;
+            background: #1e293b; /* Fallback for blur */
+            padding: 0 6px;
+            color: var(--accent-1);
+            border-radius: 4px;
+        }
+
+        /* Interactive Button */
+        .btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.6s ease;
+        }
+
+        .btn:hover::after {
+            left: 100%;
+        }
+
+        /* Results Area */
+        .result-wrapper {
+            margin-top: 30px;
+            height: 0;
+            overflow: hidden;
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+
+        .result-wrapper.show {
+            height: auto;
+            opacity: 1;
+        }
+
+        .result-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px dashed var(--accent-2);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, var(--accent-3), transparent 30%);
+            animation: rotate 4s linear infinite;
+            z-index: 0;
+            opacity: 0.1;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .result-title {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .result-species {
+            color: var(--text-main);
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            text-shadow: 0 0 20px rgba(255,255,255,0.2);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .species-icon {
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Loaders and Errors */
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-msg {
+            color: var(--error);
+            background: rgba(251, 113, 133, 0.1);
+            border: 1px solid rgba(251, 113, 133, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            text-align: center;
+            display: none;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            .card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Animation Orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Iris Explorer</h1>
+                <p class="subtitle">AI-powered botanical classification</p>
+            </div>
+
+            <form id="prediction-form">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <input type="text" id="sepal_length" required>
+                        <i class="fas fa-ruler-horizontal"></i>
+                        <label>Sepal Length (cm)</label>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" id="sepal_width" required>
+                        <i class="fas fa-ruler-vertical"></i>
+                        <label>Sepal Width (cm)</label>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" id="petal_length" required>
+                        <i class="fas fa-leaf"></i>
+                        <label>Petal Length (cm)</label>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" id="petal_width" required>
+                        <i class="fas fa-seedling"></i>
+                        <label>Petal Width (cm)</label>
+                    </div>
+                </div>
+
+                <div class="error-msg" id="error-display"></div>
+
+                <button type="submit" class="btn" id="predict-btn">
+                    <span id="btn-text">Analyze Specimen</span>
+                    <div class="loader" id="loader"></div>
+                    <i class="fas fa-sparkles" id="btn-icon"></i>
+                </button>
+            </form>
+
+            <div class="result-wrapper" id="result-container">
+                <div class="result-card">
+                    <div class="result-content">
+                        <div class="result-title">Identified Species</div>
+                        <div class="result-species">
+                            <i class="fas fa-spa species-icon" id="species-icon"></i>
+                            <span id="prediction-output">Setosa</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const predictBtn = document.getElementById('predict-btn');
+        const loader = document.getElementById('loader');
+        const btnText = document.getElementById('btn-text');
+        const btnIcon = document.getElementById('btn-icon');
+        const resultContainer = document.getElementById('result-container');
+        const predictionOutput = document.getElementById('prediction-output');
+        const errorDisplay = document.getElementById('error-display');
+        const speciesIcon = document.getElementById('species-icon');
+
+        // Allow only numbers and decimals, swap text to valid numeric format
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');
+            });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Hide previous results/errors
+            errorDisplay.style.display = 'none';
+            resultContainer.classList.remove('show');
+            resultContainer.style.height = '0px';
+            
+            // Collect data
+            const data = {
+                sepal_length: parseFloat(document.getElementById('sepal_length').value),
+                sepal_width: parseFloat(document.getElementById('sepal_width').value),
+                petal_length: parseFloat(document.getElementById('petal_length').value),
+                petal_width: parseFloat(document.getElementById('petal_width').value)
+            };
+
+            // Validation
+            if (Object.values(data).some(val => isNaN(val))) {
+                showError("Please enter valid numeric values for all dimensions.");
+                return;
+            }
+
+            // Start Loading
+            setLoading(true);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) throw new Error('Network error');
+                const result = await response.json();
+                
+                // Simulate slight network delay for dramatic effect
+                setTimeout(() => {
+                    displayResult(result.prediction);
+                    setLoading(false);
+                }, 800);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError("Could not connect to the neural network backend.");
+                setLoading(false);
+            }
+        });
+
+        function setLoading(isLoading) {
+            predictBtn.disabled = isLoading;
+            if (isLoading) {
+                btnText.innerText = 'Analyzing...';
+                loader.style.display = 'block';
+                btnIcon.style.display = 'none';
+                predictBtn.style.opacity = '0.8';
+            } else {
+                btnText.innerText = 'Analyze Specimen';
+                loader.style.display = 'none';
+                btnIcon.style.display = 'block';
+                predictBtn.style.opacity = '1';
+            }
+        }
+
+        function displayResult(species) {
+            predictionOutput.innerText = species;
+            
+            // Dynamic Icons and Colors based on species
+            if(species.toLowerCase() === 'setosa') {
+                speciesIcon.className = 'fas fa-leaf species-icon';
+                speciesIcon.style.color = 'var(--success)';
+            } else if(species.toLowerCase() === 'versicolor') {
+                speciesIcon.className = 'fas fa-fan species-icon';
+                speciesIcon.style.color = 'var(--accent-1)';
+            } else {
+                speciesIcon.className = 'fas fa-spa species-icon';
+                speciesIcon.style.color = 'var(--accent-3)';
+            }
+
+            // Animate In
+            resultContainer.style.display = 'block';
+            // Calculate height for transition
+            const cardHeight = resultContainer.querySelector('.result-card').offsetHeight;
+            resultContainer.style.height = (cardHeight + 30) + 'px'; // +30 for margin
+            
+            requestAnimationFrame(() => {
+                resultContainer.classList.add('show');
+            });
+        }
+
+        function showError(msg) {
+            errorDisplay.innerText = msg;
+            errorDisplay.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
